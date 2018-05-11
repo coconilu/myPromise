@@ -1,18 +1,9 @@
-const { Promise } = require('../src/Promise')
+const { MyPromise } = require('../src/Promise')
 
-new Promise((resolve, reject) => {
-    setTimeout(() => {
-        reject('hello world')
-    }, 2000)
-}).then(value => {
-    console.log(value)
-}, err => {
-    console.log(err)
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve('hello world')
-        }, 2000)
-    })
-}).then(value => {
-    console.log(value)
-})
+MyPromise.resolve()
+.then(value=>{console.log(value)},err=>{console.log(err)})
+.then(value=>{console.log(value);throw new Error('test')},err=>{console.log(err)})
+.then(value=>{console.log(value)},err=>{console.log(err)})
+.catch(err=>{console.log(err)})
+.then(value=>{console.log(value)},err=>{console.log(err)})
+.finally(()=>{console.log('end')})
