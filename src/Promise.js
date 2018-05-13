@@ -4,27 +4,30 @@ const stateEnum = {
     rejected: 2
 }
 
-const noop = () => { }
+const noop = () => {}
 
 const resolve = function (value) {
     if (this.state === stateEnum.pending) {
         this.state = stateEnum.resolved
         setTimeout(() => {
             let result;
-            if (this.onResolvedArray[0] && this.onResolvedArray[0] instanceof Function) {
-                try {
-                    result = this.onResolvedArray[0].call(undefined, value)
-                    // 判断返回的是不是一个Promise对象
-                    if (!(result instanceof MyPromise)) {
-                        result = MyPromise.resolve(result)
-                    }
-                } catch (err) {
-                    result = MyPromise.reject(err)
-                } finally {
-                    result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                    this.onResolvedArray.length = 0
-                    this.onRejectedArray.length = 0
+            // 过滤onResolvedArray中undefined的情况
+            while (!(this.onResolvedArray[0] && this.onResolvedArray[0] instanceof Function)) {
+                this.onResolvedArray = this.onResolvedArray.slice(1)
+                this.onRejectedArray = this.onRejectedArray.slice(1)
+            }
+            try {
+                result = this.onResolvedArray[0].call(undefined, value)
+                // 判断返回的是不是一个Promise对象
+                if (!(result instanceof MyPromise)) {
+                    result = MyPromise.resolve(result)
                 }
+            } catch (err) {
+                result = MyPromise.reject(err)
+            } finally {
+                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
+                this.onResolvedArray.length = 0
+                this.onRejectedArray.length = 0
             }
         })
         // asynFun.call(this, this.onResolvedArray)
@@ -36,20 +39,23 @@ const reject = function (err) {
         this.state = stateEnum.rejected
         setTimeout(() => {
             let result;
-            if (this.onRejectedArray[0] && this.onRejectedArray[0] instanceof Function) {
-                try {
-                    result = this.onRejectedArray[0].call(undefined, err)
-                    // 判断返回的是不是一个Promise对象
-                    if (!(result instanceof MyPromise)) {
-                        result = MyPromise.resolve(result)
-                    }
-                } catch (err) {
-                    result = MyPromise.reject(err)
-                } finally {
-                    result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                    this.onResolvedArray.length = 0
-                    this.onRejectedArray.length = 0
+            // 过滤onResolvedArray中undefined的情况
+            while (!(this.onRejectedArray[0] && this.onRejectedArray[0] instanceof Function)) {
+                this.onResolvedArray = this.onResolvedArray.slice(1)
+                this.onRejectedArray = this.onRejectedArray.slice(1)
+            }
+            try {
+                result = this.onRejectedArray[0].call(undefined, err)
+                // 判断返回的是不是一个Promise对象
+                if (!(result instanceof MyPromise)) {
+                    result = MyPromise.resolve(result)
                 }
+            } catch (err) {
+                result = MyPromise.reject(err)
+            } finally {
+                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
+                this.onResolvedArray.length = 0
+                this.onRejectedArray.length = 0
             }
         })
         // asynFun.call(this, this.onRejectedArray)
@@ -99,21 +105,21 @@ class MyPromise {
         this.onRejectedArray = this.onRejectedArray.concat(rejectedArray)
     }
 
-    then() {
-        this.onResolvedArray.push(arguments[0] || noop)
-        this.onRejectedArray.push(arguments[1] || noop)
+    catch () {
+        this.onResolvedArray.push(undefined)
+        this.onRejectedArray.push(arguments[0])
         return this
     }
 
-    catch() {
-        this.onResolvedArray.push(noop)
-        this.onRejectedArray.push(arguments[0] || noop)
+    then() {
+        this.onResolvedArray.push(arguments[0])
+        this.onRejectedArray.push(arguments[1])
         return this
     }
 
     finally() {
-        this.onResolvedArray.push(arguments[0] || noop)
-        this.onRejectedArray.push(arguments[0] || noop)
+        this.onResolvedArray.push(arguments[0])
+        this.onRejectedArray.push(arguments[0])
         return this
     }
 
@@ -132,7 +138,11 @@ MyPromise.reject = function (err) {
 }
 
 MyPromise.all = function () {
-    let paramsArr = Array.prototype.slice.call(arguments)
+    const results = [];
+    const paramsArr = Array.prototype.slice.call(arguments)
+    return new Promise(() => {
+
+    })
 }
 
 MyPromise.race = function () {
