@@ -138,15 +138,42 @@ MyPromise.reject = function (err) {
 }
 
 MyPromise.all = function () {
-    const results = [];
+    const results = []
     const paramsArr = Array.prototype.slice.call(arguments)
-    return new Promise(() => {
-
+    const numOfPromise = 0
+    return new Promise((resolve, reject) => {
+        paramsArr.map((value, index, arr) => {
+            if (value instanceof MyPromise) {
+                ++ numOfPromise
+                value.then(val => {
+                    results[index] = val
+                    -- numOfPromise
+                    if (numOfPromise === 0) {
+                        resolve(results)
+                    }
+                }, err => {
+                    reject(err)
+                })
+            } else {
+                results[index] = value
+            }
+        })
     })
 }
 
 MyPromise.race = function () {
-
+    const paramsArr = Array.prototype.slice.call(arguments)
+    return new Promise((resolve, reject) => {
+        paramsArr.map((value, index, arr) => {
+            if (value instanceof MyPromise) {
+                value.then(val => {
+                    resolve(val)
+                }, err => {
+                    reject(err)
+                })
+            }
+        })
+    })
 }
 
 // 兼容性导出
