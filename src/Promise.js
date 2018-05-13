@@ -12,24 +12,22 @@ const resolve = function (value) {
             let result;
             // 过滤onResolvedArray中undefined的情况，注意避免死循环
             while (!(this.onResolvedArray[0] instanceof Function)) {
-                if (!this.onResolvedArray.length) break
+                if (!this.onResolvedArray.length) return
                 this.onResolvedArray = this.onResolvedArray.slice(1)
                 this.onRejectedArray = this.onRejectedArray.slice(1)
             }
-            if (this.onResolvedArray[0] instanceof Function) {
-                try {
-                    result = this.onResolvedArray[0].call(undefined, value)
-                    // 判断返回的是不是一个Promise对象
-                    if (!(result instanceof MyPromise)) {
-                        result = MyPromise.resolve()
-                    }
-                } catch (err) {
-                    result = MyPromise.reject(err)
-                } finally {
-                    result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                    this.onResolvedArray.length = 0
-                    this.onRejectedArray.length = 0
+            try {
+                result = this.onResolvedArray[0].call(undefined, value)
+                // 判断返回的是不是一个Promise对象
+                if (!(result instanceof MyPromise)) {
+                    result = MyPromise.resolve()
                 }
+            } catch (err) {
+                result = MyPromise.reject(err)
+            } finally {
+                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
+                this.onResolvedArray.length = 0
+                this.onRejectedArray.length = 0
             }
         })
     }
@@ -42,24 +40,22 @@ const reject = function (err) {
             let result;
             // 过滤onResolvedArray中undefined的情况
             while (!(this.onRejectedArray[0] instanceof Function)) {
-                if (!this.onRejectedArray.length) break
+                if (!this.onRejectedArray.length) return
                 this.onResolvedArray = this.onResolvedArray.slice(1)
                 this.onRejectedArray = this.onRejectedArray.slice(1)
             }
-            if (this.onRejectedArray[0] instanceof Function) {
-                try {
-                    result = this.onRejectedArray[0].call(undefined, err)
-                    // 判断返回的是不是一个Promise对象
-                    if (!(result instanceof MyPromise)) {
-                        result = MyPromise.resolve()
-                    }
-                } catch (err) {
-                    result = MyPromise.reject(err)
-                } finally {
-                    result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                    this.onResolvedArray.length = 0
-                    this.onRejectedArray.length = 0
+            try {
+                result = this.onRejectedArray[0].call(undefined, err)
+                // 判断返回的是不是一个Promise对象
+                if (!(result instanceof MyPromise)) {
+                    result = MyPromise.resolve()
                 }
+            } catch (err) {
+                result = MyPromise.reject(err)
+            } finally {
+                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
+                this.onResolvedArray.length = 0
+                this.onRejectedArray.length = 0
             }
         })
     }
