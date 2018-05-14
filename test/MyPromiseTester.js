@@ -1,6 +1,6 @@
 const {
     MyPromise
-} = require('../src/Promise');
+} = require('../src/MyPromise');
 
 // 基本测试
 (() => {
@@ -34,6 +34,16 @@ const {
         })
 });
 
+// 测试报错
+(() => {
+    new MyPromise(resolve => {
+        throw new Error('test')
+    }).then(value => { }, err => {
+        console.log(err)
+    }).catch(err => {
+        console.log(err)
+    })
+})();
 
 // race测试
 (() => {
@@ -75,4 +85,4 @@ const {
     myAll.then(value => {
         console.log(value)
     })
-})();
+});
