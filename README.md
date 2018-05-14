@@ -1,7 +1,10 @@
 # 介绍MyPromise
 MyPromise是模仿Promise实现的一套异步处理框架，但是MyPromise是使用setTimeout和ES6语法实现的。其中ES6语法是可选的。
+
 它跟ES6标准实现的Promise是有区别的：
+
 ES6的Promise是使用micro-task-queue，回调在一轮事件循环里就可以被主线程执行；
+
 而MyPromise由于是使用setTimeout实现的，回调是放在macro-task-queue里，所以会在下一轮事件循环被主线程执行。
 
 > micro-task-queue和macro-task-queue的介绍可以看我的[另一篇文章](https://github.com/coconilu/Blog/issues/7)
@@ -29,17 +32,20 @@ Promise.all()
 4. setTimeout异步处理思维
 
 # MyPromise原理
-基于setTimeout实现的异步框架；
-存储每一次链式调用的回调；
-在发起resolve（成功）或reject（失败）时发起异步处理。
+1. 基于setTimeout实现的异步框架；
 
+2. 存储每一次链式调用的回调；
+
+3. 在发起resolve（成功）或reject（失败）时发起异步处理。
 
 # 逐个实现API
 完整的代码可以看：[`./src/MyPromise.js`](https://github.com/coconilu/myPromise/blob/master/src/MyPromise.js)
 
 ## 1. MyPromise的构造函数
 首先需要保留MyPromise的状态，有3个状态：pending（未完成状态）、resolved（成功状态）、rejected（失败状态）；
+
 其次需要存储链式调用中的回调函数（下面称之为`chain-callback`），使用数组来存储它们；
+
 最后调用构造函数传入进来的实参回调（下面称之为`argument-callback`）。
 
 代码如下：
@@ -98,7 +104,7 @@ const resolve = function (value) {
 3. 等到主线程执行这个回调的时候，会把`chain-callback`中取出一个回调执行，并判断返回的结果是不是另一个MyPromise，如果不是则创造一个没有带值的MyPromise，并把`chain-callback`的剩下回调传给新的MyPromise；
 4. 继续等待MyPromise里的`argument-callback`调用resolve方法，回到2。
 
-这就是链式调用的关键逻辑。
+这就是**链式调用的关键逻辑**。
 
 ## 3. then、catch、finally
 这三个函数都是为了填充MyPromise对象的`chain-callback`，逻辑很简单。
@@ -139,6 +145,7 @@ MyPromise.reject = function (err) {
 
 ## 5. MyPromise.race和MyPromise.all
 到这里，其实已经介绍完MyPromise的主要代码和逻辑。
+
 而MyPromise.race和MyPromise.all提供了一些特殊的用途，借用MDN的介绍。
 
 > Promise.race(iterable) 方法返回一个 promise ，并伴随着 promise对象解决的返回值或拒绝的错误原因, 只要 iterable 中有一个 promise 对象"解决(resolve)"或"拒绝(reject)"。
@@ -193,5 +200,7 @@ MyPromise.all = function (arr) {
 
 # 写在最后
 如果文章哪里写的不对，还望不吝指教。
+
 若有疑问，可以在issue中给我留言。
+
 谢谢你能看到这里。
