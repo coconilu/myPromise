@@ -69,11 +69,10 @@ class MyPromise {
         this.onRejectedArray = [];
         try {
             this.fun.call(undefined, resolve.bind(this), reject.bind(this))
-        } catch (error) {
+        } catch (err) {
             // 处理错误
-            console.log(err)
             setTimeout(() => {
-                reject(error)
+                reject.bind(this)(err)
             })
         }
     }
