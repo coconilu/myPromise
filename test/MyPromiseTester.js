@@ -32,7 +32,7 @@ const {
         .finally(() => {
             console.log('end')
         })
-});
+})();
 
 // 测试报错
 (() => {
@@ -64,7 +64,7 @@ const {
     myRace.then(value => {
         console.log(value)
     })
-});
+})();
 
 // all测试
 (() => {
@@ -85,4 +85,4 @@ const {
     myAll.then(value => {
         console.log(value)
     })
-});
+})();
