@@ -46,3 +46,19 @@ Promise.all()
 最后调用构造函数传入进来的回调。
 
 代码如下：
+```
+constructor(fun) {
+    this.state = stateEnum.pending
+    this.fun = fun
+    this.onResolvedArray = [];
+    this.onRejectedArray = [];
+    try {
+        this.fun.call(undefined, resolve.bind(this), reject.bind(this))
+    } catch (err) {
+        // 处理错误
+        setTimeout(() => {
+            reject.bind(this)(err)
+        })
+    }
+}
+```
