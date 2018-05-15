@@ -38,6 +38,10 @@ Promise.all()
 
 3. 在发起resolve（成功）或reject（失败）时发起异步处理。
 
+> 用一张图描述整个业务逻辑：
+
+![MyPromise原理](https://raw.githubusercontent.com/coconilu/myPromise/master/picture/MyPromise.jpg)
+
 # 逐个实现API
 完整的代码可以看：[`./src/MyPromise.js`](https://github.com/coconilu/myPromise/blob/master/src/MyPromise.js)
 
