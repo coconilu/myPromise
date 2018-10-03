@@ -1,0 +1,29 @@
+{
+  "name": "mypromise",
+  "version": "1.0.0",
+  "description": "Promise using setTimeout",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^23.6.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coconilu/myPromise.git"
+  },
+  "keywords": [
+    "Promise"
+  ],
+  "author": "coconilu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/coconilu/myPromise/issues"
+  },
+  "homepage": "https://github.com/coconilu/myPromise#readme"
+}
