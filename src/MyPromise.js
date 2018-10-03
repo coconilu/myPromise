@@ -98,59 +98,58 @@ class MyPromise {
         return this
     }
 
-}
-
-MyPromise.resolve = function (value) {
-    return new MyPromise((_resolve, _reject) => {
-        _resolve(value)
-    })
-}
-
-MyPromise.reject = function (err) {
-    return new MyPromise((_resolve, _reject) => {
-        _reject(err)
-    })
-}
-
-MyPromise.all = function (arr) {
-    const results = []
-    const paramsArr = Array.prototype.slice.call(arr)
-    let numOfPromise = 0
-    return new MyPromise((resolve, reject) => {
-        paramsArr.map((value, index, arr) => {
-            if (value instanceof MyPromise) {
-                ++numOfPromise;
-                value.then(val => {
-                    results[index] = val;
-                    --numOfPromise;
-                    if (numOfPromise === 0) {
-                        resolve(results)
-                    }
+    static resolve(value) {
+        if (value instanceof MyPromise) return value
+        return new MyPromise((_resolve, _reject) => {
+            _resolve(value)
+        })
+    }
+    
+    static reject(err) {
+        return new MyPromise((_resolve, _reject) => {
+            _reject(err)
+        })
+    }
+    
+    static all(arr) {
+        const results = []
+        const paramsArr = Array.prototype.slice.call(arr)
+        let numOfPromise = 0
+        return new MyPromise((resolve, reject) => {
+            paramsArr.map((value, index, arr) => {
+                if (value instanceof MyPromise) {
+                    ++numOfPromise;
+                    value.then(val => {
+                        results[index] = val;
+                        --numOfPromise;
+                        if (numOfPromise === 0) {
+                            resolve(results)
+                        }
+                    }, err => {
+                        reject(err)
+                    })
+                } else {
+                    results[index] = value
+                }
+            })
+        })
+    }
+    
+    static race(arr) {
+        const paramsArr = Array.prototype.slice.call(arr)
+        return new MyPromise((resolve, reject) => {
+            paramsArr.map((item, index, arr) => {
+                if (!(item instanceof MyPromise)) {
+                    item = MyPromise.resolve(item)
+                }
+                item.then(val => {
+                    resolve(val)
                 }, err => {
                     reject(err)
                 })
-            } else {
-                results[index] = value
-            }
-        })
-    })
-}
-
-MyPromise.race = function (arr) {
-    const paramsArr = Array.prototype.slice.call(arr)
-    return new MyPromise((resolve, reject) => {
-        paramsArr.map((item, index, arr) => {
-            if (!(item instanceof MyPromise)) {
-                item = MyPromise.resolve(item)
-            }
-            item.then(val => {
-                resolve(val)
-            }, err => {
-                reject(err)
             })
         })
-    })
+    }
 }
 
-// 兼容性导出
 exports.MyPromise = MyPromise
