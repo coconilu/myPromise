@@ -7,14 +7,13 @@ const stateEnum = {
 
 const resolve = function (value) {
     if (this.state === stateEnum.pending) {
-        this.state = stateEnum.resolved
         setTimeout(() => {
             let result;
             // 过滤onResolvedArray中undefined的情况，注意避免死循环
             while (!(this.onResolvedArray[0] instanceof Function)) {
                 if (!this.onResolvedArray.length) return
-                this.onResolvedArray = this.onResolvedArray.slice(1)
-                this.onRejectedArray = this.onRejectedArray.slice(1)
+                this.onResolvedArray.shift()
+                this.onRejectedArray.shift()
             }
             try {
                 result = this.onResolvedArray[0].call(undefined, value)
@@ -22,27 +21,27 @@ const resolve = function (value) {
                 if (!(result instanceof MyPromise)) {
                     result = MyPromise.resolve()
                 }
+                this.state = stateEnum.resolved
             } catch (err) {
                 result = MyPromise.reject(err)
             } finally {
-                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                this.onResolvedArray.length = 0
-                this.onRejectedArray.length = 0
+                this.onResolvedArray.shift()
+                this.onRejectedArray.shift()
+                result.fillCallbacks(this.onResolvedArray, this.onRejectedArray)
             }
         })
     }
 }
 
 const reject = function (err) {
-    if (this.state === stateEnum.pending || this.state === stateEnum.resolved) {
-        this.state = stateEnum.rejected
+    if (this.state === stateEnum.pending) {
         setTimeout(() => {
             let result;
             // 过滤onResolvedArray中undefined的情况
             while (!(this.onRejectedArray[0] instanceof Function)) {
                 if (!this.onRejectedArray.length) return
-                this.onResolvedArray = this.onResolvedArray.slice(1)
-                this.onRejectedArray = this.onRejectedArray.slice(1)
+                this.onResolvedArray.shift()
+                this.onRejectedArray.shift()
             }
             try {
                 result = this.onRejectedArray[0].call(undefined, err)
@@ -50,12 +49,13 @@ const reject = function (err) {
                 if (!(result instanceof MyPromise)) {
                     result = MyPromise.resolve()
                 }
+                this.state = stateEnum.rejected
             } catch (err) {
                 result = MyPromise.reject(err)
             } finally {
-                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                this.onResolvedArray.length = 0
-                this.onRejectedArray.length = 0
+                this.onResolvedArray.shift()
+                this.onRejectedArray.shift()
+                result.fillCallbacks(this.onResolvedArray, this.onRejectedArray)
             }
         })
     }
@@ -71,18 +71,16 @@ class MyPromise {
             this.fun.call(undefined, resolve.bind(this), reject.bind(this))
         } catch (err) {
             // 处理错误
-            setTimeout(() => {
-                reject.bind(this)(err)
-            })
+            reject.bind(this)(err)
         }
     }
 
     fillCallbacks(resolvedArray, rejectedArray) {
-        this.onResolvedArray = this.onResolvedArray.concat(resolvedArray)
-        this.onRejectedArray = this.onRejectedArray.concat(rejectedArray)
+        this.onResolvedArray = resolvedArray
+        this.onRejectedArray = rejectedArray
     }
 
-    catch () {
+    catch() {
         this.onResolvedArray.push(undefined)
         this.onRejectedArray.push(arguments[0])
         return this
@@ -141,27 +139,18 @@ MyPromise.all = function (arr) {
 MyPromise.race = function (arr) {
     const paramsArr = Array.prototype.slice.call(arr)
     return new MyPromise((resolve, reject) => {
-        paramsArr.map((value, index, arr) => {
-            if (value instanceof MyPromise) {
-                value.then(val => {
-                    resolve(val)
-                }, err => {
-                    reject(err)
-                })
+        paramsArr.map((item, index, arr) => {
+            if (!(item instanceof MyPromise)) {
+                item = MyPromise.resolve(item)
             }
+            item.then(val => {
+                resolve(val)
+            }, err => {
+                reject(err)
+            })
         })
     })
 }
 
 // 兼容性导出
-if (typeof define === 'function' && define.amd) {
-    // AMD
-    define(() => {
-        return {
-            Promise: MyPromise
-        }
-    });
-} else if (typeof exports === 'object' && typeof module.exports === "object") {
-    // Node, CommonJS之类的
-    exports.MyPromise = MyPromise
-}
+exports.MyPromise = MyPromise

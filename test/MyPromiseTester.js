@@ -3,50 +3,39 @@ const {
 } = require('../src/MyPromise');
 
 // 基本测试
-(() => {
-    MyPromise.resolve()
+let baseTest = () => {
+    MyPromise.resolve('start')
         .then(value => {
             console.log(value)
+            throw new Error('error1')
         }, err => {
             console.log(err)
         })
         .then(value => {
             console.log(value);
-            throw new Error('test')
         }, err => {
             console.log(err)
-        })
-        .then(value => {
-            console.log(value)
-        }, err => {
-            console.log(err)
+            throw new Error('error2')
         })
         .catch(err => {
-            console.log(err)
-        })
-        .then(value => {
-            console.log(value)
-        }, err => {
             console.log(err)
         })
         .finally(() => {
             console.log('end')
         })
-})();
+}
 
 // 测试报错
-(() => {
-    new MyPromise(resolve => {
+let errorTest = () => {
+    new MyPromise(() => {
         throw new Error('test')
-    }).then(value => { }, err => {
-        console.log(err)
     }).catch(err => {
         console.log(err)
     })
-})();
+}
 
 // race测试
-(() => {
+let raceTest = () => {
     var myRace = MyPromise.race([1, MyPromise.resolve(2).then(value => {
         return new MyPromise(resolve => {
             setTimeout(() => {
@@ -64,10 +53,10 @@ const {
     myRace.then(value => {
         console.log(value)
     })
-})();
+}
 
 // all测试
-(() => {
+let allTest = () => {
     var myAll = MyPromise.all([1, MyPromise.resolve(2).then(value => {
         return new MyPromise(resolve => {
             setTimeout(() => {
@@ -85,4 +74,9 @@ const {
     myAll.then(value => {
         console.log(value)
     })
-})();
+}
+
+baseTest()
+// errorTest()
+// allTest()
+// raceTest()
