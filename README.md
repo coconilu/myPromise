@@ -36,9 +36,7 @@ Promise.all()
 ## MyPromise原理
 
 1. 基于setTimeout实现的异步框架；
-
 2. 存储每一次链式调用的回调；
-
 3. 在发起resolve（成功）或reject（失败）时发起异步处理。
 
 > 用一张图描述整个业务逻辑：
@@ -69,9 +67,7 @@ constructor(fun) {
         this.fun.call(undefined, resolve.bind(this), reject.bind(this))
     } catch (err) {
         // 处理错误
-        setTimeout(() => {
-            reject.bind(this)(err)
-        })
+        reject.bind(this)(err)
     }
 }
 ```
@@ -85,14 +81,13 @@ constructor(fun) {
 ```Javascript
 const resolve = function (value) {
     if (this.state === stateEnum.pending) {
-        this.state = stateEnum.resolved
         setTimeout(() => {
             let result;
             // 过滤onResolvedArray中undefined的情况，注意避免死循环
             while (!(this.onResolvedArray[0] instanceof Function)) {
                 if (!this.onResolvedArray.length) return
-                this.onResolvedArray = this.onResolvedArray.slice(1)
-                this.onRejectedArray = this.onRejectedArray.slice(1)
+                this.onResolvedArray.shift()
+                this.onRejectedArray.shift()
             }
             try {
                 result = this.onResolvedArray[0].call(undefined, value)
@@ -100,12 +95,13 @@ const resolve = function (value) {
                 if (!(result instanceof MyPromise)) {
                     result = MyPromise.resolve()
                 }
+                this.state = stateEnum.resolved
             } catch (err) {
                 result = MyPromise.reject(err)
             } finally {
-                result.fillCallbacks(this.onResolvedArray.slice(1), this.onRejectedArray.slice(1))
-                this.onResolvedArray.length = 0
-                this.onRejectedArray.length = 0
+                this.onResolvedArray.shift()
+                this.onRejectedArray.shift()
+                result.fillCallbacks(this.onResolvedArray, this.onRejectedArray)
             }
         })
     }
@@ -146,13 +142,14 @@ finally() {
 这两个方法不同于前面介绍的resolve和reject，它们是MyPromise类上的方法，主要作用是创建一个MyPromise对象并调用`argument-callback`里的resolve或reject：
 
 ```Javascript
-MyPromise.resolve = function (value) {
+static resolve(value) {
+    if (value instanceof MyPromise) return value
     return new MyPromise((_resolve, _reject) => {
         _resolve(value)
     })
 }
 
-MyPromise.reject = function (err) {
+static reject(err) {
     return new MyPromise((_resolve, _reject) => {
         _reject(err)
     })
@@ -168,17 +165,18 @@ MyPromise.reject = function (err) {
 > Promise.race(iterable) 方法返回一个 promise ，并伴随着 promise对象解决的返回值或拒绝的错误原因, 只要 iterable 中有一个 promise 对象"解决(resolve)"或"拒绝(reject)"。
 
 ```Javascript
-MyPromise.race = function (arr) {
+static race(arr) {
     const paramsArr = Array.prototype.slice.call(arr)
     return new MyPromise((resolve, reject) => {
-        paramsArr.map((value, index, arr) => {
-            if (value instanceof MyPromise) {
-                value.then(val => {
-                    resolve(val)
-                }, err => {
-                    reject(err)
-                })
+        paramsArr.map((item, index, arr) => {
+            if (!(item instanceof MyPromise)) {
+                item = MyPromise.resolve(item)
             }
+            item.then(val => {
+                resolve(val)
+            }, err => {
+                reject(err)
+            })
         })
     })
 }
@@ -187,7 +185,7 @@ MyPromise.race = function (arr) {
 > Promise.all(iterable) 方法返回一个 Promise 实例，此实例在 iterable 参数内所有的 promise 都“完成（resolved）”或参数中不包含 promise 时回调完成（resolve）；如果参数中  promise 有一个失败（rejected），此实例回调失败（rejecte），失败原因的是第一个失败 promise 的结果。
 
 ```Javascript
-MyPromise.all = function (arr) {
+static all(arr) {
     const results = []
     const paramsArr = Array.prototype.slice.call(arr)
     let numOfPromise = 0
@@ -214,7 +212,9 @@ MyPromise.all = function (arr) {
 
 ## 测试
 
-上面主要介绍了resolve，而reject只是只言片语带过。希望[源码](https://github.com/coconilu/myPromise/blob/master/src/MyPromise.js)和[测试代码](https://github.com/coconilu/myPromise/blob/master/test/MyPromiseTester.js)能解答你心中的疑惑。
+上面主要介绍了resolve，而reject只是只言片语带过。希望[源码](https://github.com/coconilu/myPromise/blob/master/src/MyPromise.js)和[测试代码](https://github.com/coconilu/myPromise/blob/master/test/MyPromise.test.js)能解答你心中的疑惑。
+
+> 测试代码使用了`Jest`框架
 
 ## 写在最后
 
