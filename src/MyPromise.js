@@ -76,8 +76,10 @@ class MyPromise {
     }
 
     fillCallbacks(resolvedArray, rejectedArray) {
-        this.onResolvedArray = resolvedArray
-        this.onRejectedArray = rejectedArray
+        this.onResolvedArray = this.onResolvedArray.concat(resolvedArray)
+        this.onRejectedArray = this.onRejectedArray.concat(rejectedArray)
+        resolvedArray.length = 0
+        rejectedArray.length = 0
     }
 
     catch() {
