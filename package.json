@@ -1,5 +1,5 @@
 {
-  "name": "mypromise",
+  "name": "@coconilu/mypromise",
   "version": "1.0.0",
   "description": "Promise using setTimeout",
   "main": "index.js",
